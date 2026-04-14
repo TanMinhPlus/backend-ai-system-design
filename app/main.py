@@ -28,3 +28,22 @@ def create_note(note: NoteCreate, db: Session = Depends(get_db)):
 def get_notes(db: Session = Depends(get_db)):
     notes = db.query(models.Note).all()
     return notes
+@app.put("/notes/{note_id}")
+def update_note(note_id: int, note: NoteCreate, db: Session = Depends(get_db)):
+    db_note = db.query(models.Note).filter(models.Note.id == note_id).first()
+    if not db_note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    db_note.title = note.title
+    db_note.content = note.content
+    db.commit()
+    db.refresh(db_note)
+    return db_note
+
+@app.delete("/notes/{note_id}")
+def delete_note(note_id: int, db: Session = Depends(get_db)):
+    db_note = db.query(models.Note).filter(models.Note.id == note_id).first()
+    if not db_note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    db.delete(db_note)
+    db.commit()
+    return {"message": f"Note {note_id} deleted successfully"}
