@@ -82,5 +82,5 @@ After running the server, visit: **http://localhost:8000/docs**
 
 ## 👨‍💻 Author
 
-**Pham Tan Minh** — Backend + AI Developer
+**Pham Tan Minh** — Backend + AI Developer (Fresher)
 - GitHub: [@TanMinhPlus](https://github.com/TanMinhPlus)
