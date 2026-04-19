@@ -58,13 +58,29 @@ def summarize(note_id: int, db: Session = Depends(get_db)):
     db_note = db.query(models.Note).filter(models.Note.id == note_id).first()
     if not db_note:
         raise HTTPException(status_code=404, detail="Note not found")
-    summary = summarize_note(db_note.content)
-    return {"note_id": note_id, "summary": summary}
+    try:
+        summary = summarize_note(db_note.content)
+        return {"note_id": note_id, "summary": summary}
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
 
 @app.post("/notes/{note_id}/ask")
 def ask(note_id: int, req: QuestionRequest, db: Session = Depends(get_db)):
     db_note = db.query(models.Note).filter(models.Note.id == note_id).first()
     if not db_note:
         raise HTTPException(status_code=404, detail="Note not found")
-    answer = ask_about_note(db_note.content, req.question)
-    return {"note_id": note_id, "answer": answer}
+    try:
+        answer = ask_about_note(db_note.content, req.question)
+        return {"note_id": note_id, "answer": answer}
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+@app.get("/notes/search")
+def search_notes(q: str, db: Session = Depends(get_db)):
+    if not q or len(q.strip()) == 0:
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
+    results = db.query(models.Note).filter(
+        models.Note.title.ilike(f"%{q}%") |
+        models.Note.content.ilike(f"%{q}%")
+    ).all()
+    return {"query": q, "results": results, "count": len(results)}
