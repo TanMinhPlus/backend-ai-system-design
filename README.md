@@ -11,7 +11,7 @@ A production-ready backend REST API that leverages AI to summarize content and a
 | Layer | Technology |
 |-------|-----------|
 | Backend Framework | FastAPI (Python) |
-| Database | PostgreSQL 18 |
+| Database | PostgreSQL 16 |
 | ORM | SQLAlchemy + Alembic |
 | AI Model | Llama 3.3 70B via Groq API |
 | Containerization | Docker + Docker Compose |
