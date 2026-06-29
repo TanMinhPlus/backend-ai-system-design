@@ -6,7 +6,7 @@
 
 A production-ready backend REST API that leverages AI to summarize content and answer questions based on notes. Built following Backend + AI + System Design principles.
 
-## 🛠 Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
@@ -26,7 +26,7 @@ A production-ready backend REST API that leverages AI to summarize content and a
 - Standard HTTP error handling
 - Docker ready
 
-## 🏗 Architecture
+## Architecture
 
     Client (Swagger/Postman)
             ↓
@@ -76,7 +76,7 @@ A production-ready backend REST API that leverages AI to summarize content and a
 | GET | /notes/{id}/summarize | AI summarize note |
 | POST | /notes/{id}/ask | AI answer question |
 
-## 📖 API Documentation
+## API Documentation
 
 After running the server, visit: **http://localhost:8000/docs**
 
