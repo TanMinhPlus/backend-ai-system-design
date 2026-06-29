@@ -1,8 +1,8 @@
-# 🚀 Backend AI System Design
+# Backend AI System Design
 
 > A smart REST API integrated with AI for note management and analysis
 
-## 📋 Overview
+## Overview
 
 A production-ready backend REST API that leverages AI to summarize content and answer questions based on notes. Built following Backend + AI + System Design principles.
 
@@ -17,14 +17,14 @@ A production-ready backend REST API that leverages AI to summarize content and a
 | Containerization | Docker + Docker Compose |
 | API Docs | Swagger UI (built-in) |
 
-## ✨ Features
+## Features
 
-- ✅ Full CRUD for notes
-- ✅ Full-text search by title and content
-- ✅ AI-powered note summarization
-- ✅ AI-powered Q&A based on note content
-- ✅ Standard HTTP error handling
-- ✅ Docker ready
+- Full CRUD for notes
+- Full-text search by title and content
+- AI-powered note summarization
+- AI-powered Q&A based on note content
+- Standard HTTP error handling
+- Docker ready
 
 ## 🏗 Architecture
 
@@ -37,7 +37,7 @@ A production-ready backend REST API that leverages AI to summarize content and a
     PostgreSQL   Groq AI API
     (Data)       (Intelligence)
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Requirements
 - Python 3.11+
@@ -63,7 +63,7 @@ A production-ready backend REST API that leverages AI to summarize content and a
     # 5. Run server
     uvicorn app.main:app --reload
 
-## 📡 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -80,7 +80,7 @@ A production-ready backend REST API that leverages AI to summarize content and a
 
 After running the server, visit: **http://localhost:8000/docs**
 
-## 👨‍💻 Author
+## Author
 
 **Pham Tan Minh** — Backend + AI Developer (Fresher)
 - GitHub: [@TanMinhPlus](https://github.com/TanMinhPlus)
