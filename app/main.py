@@ -6,57 +6,19 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.ai import summarize_note, ask_about_note
-from app.database import check_database, get_db, init_db
-from app.schemas import (
-    AnswerResponse,
-    HealthResponse,
-    MessageResponse,
-    NoteCreate,
-    NoteRead,
-    NoteSearchResponse,
-    QuestionRequest,
-    ReadinessResponse,
-    SummaryResponse,
-)
 
+models.Base.metadata.create_all(bind=engine)
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    if os.getenv("AUTO_CREATE_TABLES", "true").lower() == "true":
-        init_db()
-    yield
+app = FastAPI(title="Backend AI System Design")
 
+class NoteCreate(BaseModel):
+    title: str
+    content: str
 
-tags_metadata = [
-    {
-        "name": "Health",
-        "description": "Operational checks for uptime monitors and deployment readiness.",
-    },
-    {
-        "name": "Notes",
-        "description": "CRUD and search operations for saved notes.",
-    },
-    {
-        "name": "AI",
-        "description": "Groq-powered summarization and Q&A over note content.",
-    },
-]
+class QuestionRequest(BaseModel):
+    question: str
 
-
-app = FastAPI(
-    title="Backend AI System Design",
-    summary="AI-assisted note management API",
-    description=(
-        "A prototype FastAPI backend that combines note CRUD, search, "
-        "PostgreSQL persistence, and Groq-powered AI analysis."
-    ),
-    version="0.2.0",
-    openapi_tags=tags_metadata,
-    lifespan=lifespan,
-)
-
-
-@app.get("/", response_model=MessageResponse, tags=["Health"], summary="API status")
+@app.get("/")
 def root():
     return {"message": "Backend AI System Design API is running"}
 
@@ -200,3 +162,13 @@ def ask(note_id: int, req: QuestionRequest, db: Session = Depends(get_db)):
         return {"note_id": note_id, "answer": answer}
     except RuntimeError as e:
         raise HTTPException(status_code=503, detail=str(e))
+
+@app.get("/notes/search")
+def search_notes(q: str, db: Session = Depends(get_db)):
+    if not q or len(q.strip()) == 0:
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
+    results = db.query(models.Note).filter(
+        models.Note.title.ilike(f"%{q}%") |
+        models.Note.content.ilike(f"%{q}%")
+    ).all()
+    return {"query": q, "results": results, "count": len(results)}
