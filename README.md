@@ -62,7 +62,9 @@ This project demonstrates a backend service that stores notes, searches across t
     # 4. Create .env file
     cp .env.example .env
 
-    # 5. Run server
+    # 5. Get Key API Groq
+    
+    # 6. Run server
     uvicorn app.main:app --reload
 
 ## API Endpoints
