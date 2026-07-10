@@ -20,14 +20,14 @@ This project demonstrates a backend service that stores notes, searches across t
 
 ## Features
 
-- ✅ Full CRUD for notes
-- ✅ Full-text search by title and content
-- ✅ AI-powered note summarization
-- ✅ AI-powered Q&A based on note content
-- ✅ Standard HTTP error handling
-- ✅ Docker ready
+- Full CRUD for notes
+- Full-text search by title and content
+- AI-powered note summarization
+- AI-powered Q&A based on note content
+- Standard HTTP error handling
+- Docker ready
 
-## 🏗 Architecture
+## Architecture
 
     Client (Swagger/Postman)
             ↓
@@ -65,7 +65,7 @@ This project demonstrates a backend service that stores notes, searches across t
     # 5. Run server
     uvicorn app.main:app --reload
 
-## 📡 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -80,11 +80,11 @@ This project demonstrates a backend service that stores notes, searches across t
 | GET | `/notes/{note_id}/summarize` | Summarize note content |
 | POST | `/notes/{note_id}/ask` | Ask a question about note content |
 
-## 📖 API Documentation
+## API Documentation
 
 After running the server, visit: **http://localhost:8000/docs**
 
-## 👨‍💻 Author
+## Author
 
 **Pham Tan Minh** — Backend + AI Developer (Fresher)
 - GitHub: [@TanMinhPlus](https://github.com/TanMinhPlus)
