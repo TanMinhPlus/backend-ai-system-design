@@ -5,22 +5,35 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app import models
-from app.ai import summarize_note, ask_about_note
+from app.ai import ask_about_note, summarize_note
+from app.database import check_database, engine, get_db
+from app.schemas import (
+    AnswerResponse,
+    HealthResponse,
+    MessageResponse,
+    NoteCreate,
+    NoteRead,
+    NoteSearchResponse,
+    QuestionRequest,
+    ReadinessResponse,
+    SummaryResponse,
+)
+
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Backend AI System Design")
 
-class NoteCreate(BaseModel):
-    title: str
-    content: str
+app = FastAPI(
+    title="Backend AI System Design",
+    version="1.0.0",
+)
 
-class QuestionRequest(BaseModel):
-    question: str
 
 @app.get("/")
 def root():
-    return {"message": "Backend AI System Design API is running"}
+    return {
+        "message": "Backend AI System Design API is running",
+    }
 
 
 @app.get(
@@ -30,21 +43,31 @@ def root():
     summary="Liveness check",
 )
 def health():
-    return {"status": "ok", "service": "backend-ai-system-design"}
+    return {
+        "status": "ok",
+        "service": "backend-ai-system-design",
+    }
 
 
 @app.get(
     "/ready",
     response_model=ReadinessResponse,
     tags=["Health"],
-    summary="Database readiness check",
+    summary="Readiness check",
 )
 def ready():
     try:
         check_database()
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Database not ready: {str(e)}")
-    return {"status": "ready", "database": "connected"}
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Database not ready: {exc}",
+        ) from exc
+
+    return {
+        "status": "ready",
+        "database": "connected",
+    }
 
 
 @app.post(
@@ -54,11 +77,19 @@ def ready():
     status_code=201,
     summary="Create a note",
 )
-def create_note(note: NoteCreate, db: Session = Depends(get_db)):
-    db_note = models.Note(title=note.title, content=note.content)
+def create_note(
+    note: NoteCreate,
+    db: Session = Depends(get_db),
+):
+    db_note = models.Note(
+        title=note.title,
+        content=note.content,
+    )
+
     db.add(db_note)
     db.commit()
     db.refresh(db_note)
+
     return db_note
 
 
@@ -68,9 +99,14 @@ def create_note(note: NoteCreate, db: Session = Depends(get_db)):
     tags=["Notes"],
     summary="List notes",
 )
-def get_notes(db: Session = Depends(get_db)):
-    notes = db.query(models.Note).order_by(models.Note.id).all()
-    return notes
+def get_notes(
+    db: Session = Depends(get_db),
+):
+    return (
+        db.query(models.Note)
+        .order_by(models.Note.id)
+        .all()
+    )
 
 
 @app.get(
@@ -80,12 +116,21 @@ def get_notes(db: Session = Depends(get_db)):
     summary="Search notes",
 )
 def search_notes(
-    q: str = Query(..., min_length=1, description="Search text for title or content"),
+    q: str = Query(
+        ...,
+        min_length=1,
+        description="Search text for title or content",
+    ),
     db: Session = Depends(get_db),
 ):
     query = q.strip()
+
     if not query:
-        raise HTTPException(status_code=400, detail="Query cannot be empty")
+        raise HTTPException(
+            status_code=400,
+            detail="Query cannot be empty",
+        )
+
     results = (
         db.query(models.Note)
         .filter(
@@ -95,7 +140,12 @@ def search_notes(
         .order_by(models.Note.id)
         .all()
     )
-    return {"query": query, "results": results, "count": len(results)}
+
+    return {
+        "query": query,
+        "results": results,
+        "count": len(results),
+    }
 
 
 @app.put(
@@ -104,14 +154,29 @@ def search_notes(
     tags=["Notes"],
     summary="Update a note",
 )
-def update_note(note_id: int, note: NoteCreate, db: Session = Depends(get_db)):
-    db_note = db.query(models.Note).filter(models.Note.id == note_id).first()
-    if not db_note:
-        raise HTTPException(status_code=404, detail="Note not found")
+def update_note(
+    note_id: int,
+    note: NoteCreate,
+    db: Session = Depends(get_db),
+):
+    db_note = (
+        db.query(models.Note)
+        .filter(models.Note.id == note_id)
+        .first()
+    )
+
+    if db_note is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Note not found",
+        )
+
     db_note.title = note.title
     db_note.content = note.content
+
     db.commit()
     db.refresh(db_note)
+
     return db_note
 
 
@@ -121,13 +186,28 @@ def update_note(note_id: int, note: NoteCreate, db: Session = Depends(get_db)):
     tags=["Notes"],
     summary="Delete a note",
 )
-def delete_note(note_id: int, db: Session = Depends(get_db)):
-    db_note = db.query(models.Note).filter(models.Note.id == note_id).first()
-    if not db_note:
-        raise HTTPException(status_code=404, detail="Note not found")
+def delete_note(
+    note_id: int,
+    db: Session = Depends(get_db),
+):
+    db_note = (
+        db.query(models.Note)
+        .filter(models.Note.id == note_id)
+        .first()
+    )
+
+    if db_note is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Note not found",
+        )
+
     db.delete(db_note)
     db.commit()
-    return {"message": f"Note {note_id} deleted successfully"}
+
+    return {
+        "message": f"Note {note_id} deleted successfully",
+    }
 
 
 @app.get(
@@ -136,15 +216,34 @@ def delete_note(note_id: int, db: Session = Depends(get_db)):
     tags=["AI"],
     summary="Summarize a note",
 )
-def summarize(note_id: int, db: Session = Depends(get_db)):
-    db_note = db.query(models.Note).filter(models.Note.id == note_id).first()
-    if not db_note:
-        raise HTTPException(status_code=404, detail="Note not found")
+def summarize(
+    note_id: int,
+    db: Session = Depends(get_db),
+):
+    db_note = (
+        db.query(models.Note)
+        .filter(models.Note.id == note_id)
+        .first()
+    )
+
+    if db_note is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Note not found",
+        )
+
     try:
         summary = summarize_note(db_note.content)
-        return {"note_id": note_id, "summary": summary}
-    except RuntimeError as e:
-        raise HTTPException(status_code=503, detail=str(e))
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=str(exc),
+        ) from exc
+
+    return {
+        "note_id": note_id,
+        "summary": summary,
+    }
 
 
 @app.post(
@@ -153,22 +252,35 @@ def summarize(note_id: int, db: Session = Depends(get_db)):
     tags=["AI"],
     summary="Ask a question about a note",
 )
-def ask(note_id: int, req: QuestionRequest, db: Session = Depends(get_db)):
-    db_note = db.query(models.Note).filter(models.Note.id == note_id).first()
-    if not db_note:
-        raise HTTPException(status_code=404, detail="Note not found")
-    try:
-        answer = ask_about_note(db_note.content, req.question)
-        return {"note_id": note_id, "answer": answer}
-    except RuntimeError as e:
-        raise HTTPException(status_code=503, detail=str(e))
+def ask(
+    note_id: int,
+    request: QuestionRequest,
+    db: Session = Depends(get_db),
+):
+    db_note = (
+        db.query(models.Note)
+        .filter(models.Note.id == note_id)
+        .first()
+    )
 
-@app.get("/notes/search")
-def search_notes(q: str, db: Session = Depends(get_db)):
-    if not q or len(q.strip()) == 0:
-        raise HTTPException(status_code=400, detail="Query cannot be empty")
-    results = db.query(models.Note).filter(
-        models.Note.title.ilike(f"%{q}%") |
-        models.Note.content.ilike(f"%{q}%")
-    ).all()
-    return {"query": q, "results": results, "count": len(results)}
+    if db_note is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Note not found",
+        )
+
+    try:
+        answer = ask_about_note(
+            db_note.content,
+            request.question,
+        )
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=str(exc),
+        ) from exc
+
+    return {
+        "note_id": note_id,
+        "answer": answer,
+    }

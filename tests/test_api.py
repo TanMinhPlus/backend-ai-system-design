@@ -106,14 +106,30 @@ def test_ai_endpoints_can_be_exercised(monkeypatch):
     assert answer.json()["answer"] == "It covers backend AI summaries."
 
 
-def test_ai_configuration_error_is_reported():
+def test_ai_configuration_error_is_reported(monkeypatch):
+    from app.ai import get_groq_client
+
+    get_groq_client.cache_clear()
+
+    monkeypatch.setenv("GROQ_API_KEY", "your_groq_key_here")
+
     with TestClient(app) as client:
         created = client.post(
             "/notes",
-            json={"title": "No AI Config", "content": "AI should fail cleanly."},
+            json={
+                "title": "No AI Config",
+                "content": "AI should fail cleanly.",
+            },
         )
+
+        assert created.status_code == 201
         note_id = created.json()["id"]
 
-        response = client.get(f"/notes/{note_id}/summarize")
+        response = client.get(
+            f"/notes/{note_id}/summarize",
+        )
 
     assert response.status_code == 503
+    assert response.json()["detail"] == "GROQ_API_KEY is not configured"
+
+    get_groq_client.cache_clear()
